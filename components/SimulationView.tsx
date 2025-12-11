@@ -3,6 +3,15 @@ import { Send, User, Bot, Loader2, ArrowRight, Activity, Calendar, FileText, Cli
 import { AgentType, ChatMessage } from '../types';
 import { classifyRequest, getMedicalInfo, mockAgentResponse } from '../services/geminiService';
 
+// Styles map for agents to ensure Tailwind classes are detected (dynamic strings like `bg-${color}` often fail)
+const AGENT_STYLES: Record<string, { border: string, bg: string, text: string, ring: string, badge: string }> = {
+  blue: { border: 'border-blue-500', bg: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-200', badge: 'bg-blue-100' },
+  teal: { border: 'border-teal-500', bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-200', badge: 'bg-teal-100' },
+  purple: { border: 'border-purple-500', bg: 'bg-purple-50', text: 'text-purple-700', ring: 'ring-purple-200', badge: 'bg-purple-100' },
+  orange: { border: 'border-orange-500', bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-200', badge: 'bg-orange-100' },
+  indigo: { border: 'border-indigo-500', bg: 'bg-indigo-50', text: 'text-indigo-700', ring: 'ring-indigo-200', badge: 'bg-indigo-100' },
+};
+
 const SimulationView: React.FC = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -101,13 +110,13 @@ const SimulationView: React.FC = () => {
     }
   };
 
-  const getAgentColor = (agent?: AgentType) => {
+  const getAgentColorKey = (agent?: AgentType): string => {
     switch (agent) {
-      case AgentType.MEDICAL_INFO: return 'bg-teal-600';
-      case AgentType.APPOINTMENT: return 'bg-purple-600';
-      case AgentType.PATIENT_MGMT: return 'bg-orange-600';
-      case AgentType.REPORT_GEN: return 'bg-indigo-600';
-      default: return 'bg-blue-600';
+      case AgentType.MEDICAL_INFO: return 'teal';
+      case AgentType.APPOINTMENT: return 'purple';
+      case AgentType.PATIENT_MGMT: return 'orange';
+      case AgentType.REPORT_GEN: return 'indigo';
+      default: return 'blue';
     }
   };
 
@@ -137,12 +146,14 @@ const SimulationView: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50/50">
-          {messages.map((msg) => (
+          {messages.map((msg) => {
+            const agentStyle = AGENT_STYLES[getAgentColorKey(msg.agent)];
+            return (
             <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                msg.role === 'user' ? 'bg-slate-200' : getAgentColor(msg.agent)
+                msg.role === 'user' ? 'bg-slate-200' : `${agentStyle.bg} ${agentStyle.text}`
               }`}>
-                {msg.role === 'user' ? <User className="w-5 h-5 text-slate-600" /> : <Bot className="w-5 h-5 text-white" />}
+                {msg.role === 'user' ? <User className="w-5 h-5 text-slate-600" /> : <Bot className="w-5 h-5" />}
               </div>
               
               <div className={`flex flex-col max-w-[80%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -171,7 +182,8 @@ const SimulationView: React.FC = () => {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
 
@@ -209,6 +221,7 @@ const SimulationView: React.FC = () => {
               name={AgentType.COORDINATOR} 
               isActive={activeAgent === AgentType.COORDINATOR} 
               icon={<NetworkIcon className="w-5 h-5" />}
+              color="blue"
             />
             
             <div className="flex justify-center">
@@ -279,14 +292,16 @@ const NetworkIcon = ({ className }: { className?: string }) => (
 );
 
 const AgentStatus = ({ name, isActive, icon, compact, color = 'blue' }: any) => {
+  const styles = AGENT_STYLES[color] || AGENT_STYLES['blue'];
+  
   const activeClass = isActive 
-    ? `border-${color}-500 bg-${color}-50 text-${color}-700 ring-2 ring-${color}-200` 
+    ? `${styles.border} ${styles.bg} ${styles.text} ring-2 ${styles.ring}` 
     : 'border-slate-200 bg-white text-slate-500 grayscale opacity-70';
 
   return (
     <div className={`border rounded-lg transition-all duration-300 ${activeClass} ${compact ? 'p-2 text-center text-xs' : 'p-3 flex items-center gap-3'}`}>
       {!compact && (
-        <div className={`p-2 rounded-md ${isActive ? `bg-${color}-100` : 'bg-slate-100'}`}>
+        <div className={`p-2 rounded-md ${isActive ? styles.badge : 'bg-slate-100'}`}>
           {icon}
         </div>
       )}
