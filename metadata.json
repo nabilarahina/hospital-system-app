@@ -1,0 +1,5 @@
+{
+  "name": "Hospital Smart Agent System",
+  "description": "An integrated hospital agent system simulating the Hospital System Coordinator and Medical Information Agent architecture.",
+  "requestFramePermissions": []
+}
